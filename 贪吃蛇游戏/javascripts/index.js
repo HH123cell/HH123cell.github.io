@@ -72,6 +72,15 @@ function SnakeGame(option) {
     }
     // 添加蛇移动的方向 (朝着右边移动)
     this.direction = "right";
+    // 添加开始游戏的按钮
+    this.start_button = document.getElementById("start_button");
+    // 添加结束游戏的按钮
+    this.pause_button = document.getElementById("pause_button");
+    // 添加记录分数的标签
+    this.score_element = document.getElementById("score");
+    // 添加分数的属性
+    this.num = 0;
+
 }
 // 2.0 在构造函数的原型上添加方法  初始化
 SnakeGame.prototype.init = function () {
@@ -84,15 +93,18 @@ SnakeGame.prototype.init = function () {
     this.drawInitFood();
     // 调用监听事件的函数
     this.addEventFunc();
+    // 调用控制游戏的函数
+    this.controlFunc();
 
-
-    // 测试
+    // 创建食物的方法
     // this.createFood();
-    var _this = this;
-    this.timer = setInterval(function () {
-        // 测试蛇移动的逻辑
-        // _this.snakeMove();
-    }, 300)
+    // var _this = this;
+    // this.timer = setInterval(function () {
+    //     // 测试蛇移动的逻辑
+    //     // _this.snakeMove();
+    //     // 测试再次绘制蛇的函数
+    //     // _this.drawSnake2();
+    // }, 300)
 }
 // 3.0 在构造函数的原型上添加方法 绘制地图
 SnakeGame.prototype.drawMap = function () {
@@ -118,6 +130,8 @@ SnakeGame.prototype.drawMap = function () {
 }
 // 4.0 在构造函数的原型上添加方法 绘制蛇（初始化）
 SnakeGame.prototype.drawInitSnake = function () {
+    // this.snakeArray 蛇相关的数据
+    // 循环蛇数组 从而绘制出
     for (var i = 0; i < this.snakeArray.length; i++) {
         this.ctx.beginPath();
         this.ctx.fillStyle = this.snakeArray[i].color;
@@ -128,6 +142,7 @@ SnakeGame.prototype.drawInitSnake = function () {
 }
 // 5.0 在构造函数的原型上添加方法 绘制食物 
 SnakeGame.prototype.drawInitFood = function () {
+    // this.food  食物相关的数据
     this.ctx.beginPath();
     this.ctx.fillStyle = this.food.color;
     this.ctx.rect(this.food.x, this.food.y, this.space, this.space);
@@ -180,32 +195,6 @@ SnakeGame.prototype.addEventFunc = function () { //函数作用域1
         // 键值码
         var keyCode = event.keyCode;
         // 判断 如果蛇往右移动 禁止按向左按键
-        // if(_this.direction=="right" && keyCode == 37){
-        //     return ;
-        // }
-        // if(_this.direction=="left" && keyCode == 39){
-        //     return ;
-        // }
-        // if(_this.direction=="down" && keyCode == 38){
-        //     return ;
-        // }
-        // if(_this.direction=="up" && keyCode == 40){
-        //     return ;
-        // }
-        // 判断keycode的值 设置蛇移动的方向
-        // if( keyCode == 37 ){
-        //     _this.direction="left";
-        // }
-        // if( keyCode == 39 ){
-        //     _this.direction="right";
-        // }
-        // if( keyCode == 40 ){
-        //     _this.direction="down";
-        // }
-        // if( keyCode == 38 ){
-        //     _this.direction="up";
-        // }
-
         // 键值码等于40 方向不是向上的话
         if (keyCode == 40 && _this.direction != "up") {
             //设置direction等于down 向下
@@ -228,7 +217,7 @@ SnakeGame.prototype.addEventFunc = function () { //函数作用域1
 // 9.0 在构造函数的原型上添加方法 设置蛇移动的逻辑
 SnakeGame.prototype.snakeMove = function () {
     // 定义蛇移动的值
-    var x = 0;
+    var x = 0; //记录蛇是水平方向移动的值  30 / -30
     var y = 0;
     // 控制语句
     switch (this.direction) {
@@ -246,25 +235,177 @@ SnakeGame.prototype.snakeMove = function () {
             break;
     }
     // 更新蛇身体的坐标 
-    for(var i = 0 ; i < this.snakeArray.length-1 ;i++){
-        this.snakeArray[i].x = this.snakeArray[i+1].x;
-        this.snakeArray[i].y = this.snakeArray[i+1].y;
+    for (var i = 0; i < this.snakeArray.length - 1; i++) {
+        this.snakeArray[i].x = this.snakeArray[i + 1].x;
+        this.snakeArray[i].y = this.snakeArray[i + 1].y;
     }
 
     // 更新蛇头的坐标
-    this.snakeArray[this.snakeArray.length-1].x +=x;
-    this.snakeArray[this.snakeArray.length-1].y +=y;
+    this.snakeArray[this.snakeArray.length - 1].x += x;
+    this.snakeArray[this.snakeArray.length - 1].y += y;
 
     // 重新绘制蛇
-    for(var j = 0 ; j < this.snakeArray.length;j++){
+    // for(var j = 0 ; j < this.snakeArray.length;j++){
+    //     this.ctx.beginPath();
+    //     this.ctx.fillStyle=this.snakeArray[j].color;
+    //     this.ctx.rect(this.snakeArray[j].x ,this.snakeArray[j].y ,this.space ,this.space);
+    //     this.ctx.closePath();
+    //     this.ctx.fill();
+    // }
+
+
+
+}
+// 10.0 在构造函数的原型上添加方法  蛇吃到食物
+SnakeGame.prototype.eatFood = function () {
+    // 定义变量记录 蛇头位置
+    var snake_head = {
+        x: this.snakeArray[this.snakeArray.length - 1].x,
+        y: this.snakeArray[this.snakeArray.length - 1].y,
+        color: "red"
+    }
+    // 判断蛇头和食物是否发生碰撞（红色和绿色）
+    if (snake_head.x == this.food.x && snake_head.y == this.food.y) {
+        console.log("吃到食物")
+        this.addSnakeBody();
+        // 记录分数
+        this.num = this.num + 1;
+        // 显示分数
+        this.score_element.innerText = this.num;
+        // 重新创建食物
+        this.createFood();
+    }
+}
+// 11.0 在构造函数的原型上添加方法 添加蛇身体
+SnakeGame.prototype.addSnakeBody = function () {
+
+    // 记录食物的坐标
+    // var food = {
+    //     x:this.food.x ,
+    //     y:this.food.y ,
+    //     color:"blue"
+    // }
+    // 存放在蛇数组的第一个位置 unshift()
+    // this.snakeArray.unshift(food);
+
+    // 记录原来的蛇尾部最后一格
+    var new_body  = {
+        x: this.snakeArray[0].x - this.space,
+        y: this.snakeArray[0].y - this.space,
+        color: "blue"
+    }
+
+    // unshift 往数组第一个位置添加元素
+    this.snakeArray.unshift(new_body);
+}
+
+// 11.0 在构造函数的原型上添加方法 再次绘制蛇
+SnakeGame.prototype.drawSnake2 = function () {
+    // 清空蛇第一个位置填充的颜色
+    this.ctx.clearRect(
+        this.snakeArray[0].x,
+        this.snakeArray[0].y,
+        this.space,
+        this.space
+    );
+    // 绘制地图
+    this.drawMap();
+    // 蛇移动
+    this.snakeMove();
+
+    // // 重新绘制蛇
+    for (var i = 0; i < this.snakeArray.length; i++) {
         this.ctx.beginPath();
-        this.ctx.fillStyle=this.snakeArray[j].color;
-        this.ctx.rect(this.snakeArray[j].x ,this.snakeArray[j].y ,this.space ,this.space);
+        this.ctx.fillStyle = this.snakeArray[i].color;
+        this.ctx.rect(this.snakeArray[i].x, this.snakeArray[i].y, this.space, this.space)
         this.ctx.closePath();
         this.ctx.fill();
     }
+    // 蛇吃到食物
+    this.eatFood();
+    // 调用复制蛇数据的函数
+    this.copySnake();
+}
+// 12.0 在构造函数的原型上添加方法 复制一份蛇数据
+SnakeGame.prototype.copySnake = function () {
+    // 空数组 记录蛇相关数据
+    var snake = [];
+    // 循环蛇数组  this.snakeArray 
+    for (var i = 0; i < this.snakeArray.length; i++) {
+        snake.push({
+            x: this.snakeArray[i].x,
+            y: this.snakeArray[i].y,
+            color: this.snakeArray[i].color
+        })
+    }
+    // 调用判断是否结束游戏的函数
+    this.isGameOver(snake);
+}
+
+// 13.0 在构造函数的原型上添加方法 判断是否结束游戏
+SnakeGame.prototype.isGameOver = function (snake) {
+    // 记录蛇头的数据（红色）
+    var head = {
+        x: this.snakeArray[this.snakeArray.length - 1].x,
+        y: this.snakeArray[this.snakeArray.length - 1].y
+    }
+    // 判断蛇在水平方向有没有超出范围
+    //  或   || 
+    // < 0  向左边移动  ||  > this.column*this.space - this.space 向右移动
+    if (head.x < 0 || head.x > (this.column * this.space - this.space)) {
+        console.log("水平方向超出范围了");
+        clearInterval(this.timer);
+        return;
+    }
+    // 判断蛇在垂直方向有没有超出范围
+    if (head.y < 0 || head.y > (this.row * this.space - this.space)) {
+        console.log("垂直方向超出范围了");
+        clearInterval(this.timer);
+        return;
+    }
+    // 判断蛇头和蛇身体发生碰撞
+    for(var i = 0 ; i < snake.length ; i++){
+        for(var j =  i+1 ; j < snake.length ; j++){
+            if(snake[j].x == snake[i].x && snake[j].y ==snake[i].y ){
+                console.log("蛇头和身体碰撞了");
+                clearInterval(this.timer);
+                return;
+            }
+        }
+    }
+
+    // 错误的逻辑
+    // for(var i = 0 ; i < snake.length ; i++){
+    //     if(head.x ==  snake[i].x && head.y == snake[i].y){
+    //         console.log("蛇头和身体碰撞了");
+    //         clearInterval(this.timer);
+    //         return;
+    //     }
+    // }
+
+
 
 }
 
+// 14.0 控制游戏开始和暂停
+SnakeGame.prototype.controlFunc = function () {
+    // 记录当前函数作用域的this
+    var _this = this;
+    // 点击开始游戏的按钮
+    this.start_button.onclick = function () {
+        // 用定时器 先清除定时器
+        clearInterval(_this.timer);
+        // 执行定时器
+        _this.timer = setInterval(function () {
+            // 调用绘制蛇的函数 drawSnake2
+            _this.drawSnake2();
+        }, 300)
+    }
 
-// ...  剩下的逻辑，星期天的早上来完成
+    // 点击暂停游戏的按钮
+    this.pause_button.onclick = function () {
+        //  清除定时器
+        clearInterval(_this.timer);
+        return;
+    }
+}
